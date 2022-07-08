@@ -15,4 +15,8 @@ mongoose.connection.on("reconnectFailed", () => {
 
 module.exports = {
   ...require("./OrderBook"),
+  ...require("./Account"),
+  ...require("./FillHistory"),
+  ...require("./Order"),
+  ...require("./Test"),
 };
