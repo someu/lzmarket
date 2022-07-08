@@ -1,5 +1,7 @@
 <template>
-  <div class="klinechart-wrapper" ref="chartDivRef"></div>
+  <div class="klinechart-wrapper">
+    <div class="klinechart" ref="chartDivRef"></div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -22,7 +24,9 @@ const applyData = (data: KLineData[]) => {
 // 初始化图表
 onMounted(() => {
   if (chartDivRef.value) {
-    klineChart.value = init(chartDivRef.value);
+    klineChart.value = init(chartDivRef.value) as Chart;
+    klineChart.value.createTechnicalIndicator("VOL", false);
+
     applyData(props.data);
   }
 });
@@ -39,3 +43,10 @@ watch(
   }
 );
 </script>
+
+<style lang="less">
+.klinechart {
+  width: 100%;
+  height: 100%;
+}
+</style>
