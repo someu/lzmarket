@@ -1,5 +1,6 @@
 const Koa = require("koa");
 const koaBody = require("koa-body");
+const cors = require("@koa/cors");
 
 const config = require("../config");
 
@@ -39,7 +40,7 @@ async function notFound(ctx, next) {
 function startServer() {
   const app = new Koa();
   app.use(handleError);
-
+  app.use(cors());
   app.use(koaBody());
 
   app.use(auth);
