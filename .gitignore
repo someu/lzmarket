@@ -25,4 +25,4 @@ pnpm-debug.log*
 **/config.js
 **/config.ts
 **/dist
-**/.logs
+**/.log*
