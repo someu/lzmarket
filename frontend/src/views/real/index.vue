@@ -1,19 +1,22 @@
 <template>
     <div class="real-wrapper">
         <div class="real">
+            <div class="title">订单表</div>
             <div class="top">
+
                 <el-form-item label="时间范围">
                     <el-date-picker v-model="daterange" type="datetimerange" size="small" />
                 </el-form-item>
                 <el-form-item label="周期间隔">
-                    <el-input min="0" v-model="interval" size="small" placeholder="周期间隔(ms)" />
+                    <el-input type="number" min="0" v-model="interval" size="small" placeholder="周期间隔(ms)" />
                 </el-form-item>
-                <el-form-item label="播放间隔">
-                    <el-input min="0" v-model="playInterval" size="small" placeholder="播放间隔(ms)" />
-                </el-form-item><br />
                 <el-button size="small" type="primary" @click="fetchData" :loading="loading">{{
                         loading ? '加载中' : '刷新'
                 }}</el-button>
+                <br />
+                <el-form-item label="播放间隔">
+                    <el-input type="number" min="0" v-model="playInterval" size="small" placeholder="播放间隔(ms)" />
+                </el-form-item><br />
             </div>
             <div class="content">
                 <div class="chart" ref="chartRef"> </div>
@@ -130,7 +133,8 @@ export default {
             const redBg = '#3b1c1a';
 
             const optionsData = []
-
+            let i = 1
+            const count = this.orderBooks.length
             for (const ob of this.orderBooks) {
                 const maxSizeData = Math.max(
                     ...ob.asks.map(i => i.value).filter(Boolean),
@@ -141,6 +145,9 @@ export default {
                 const bidMaxs = bids.map((bid) => ({ ...bid, value: maxSizeData }));
 
                 optionsData.push({
+                    title: {
+                        text: `${dayjs(ob.ts).format('YYYY-MM-DD HH:mm:ss:SSS')} (${i++}/${count})`,
+                    },
                     xAxis: [{
                         max: maxSizeData
                     }, {
@@ -176,23 +183,40 @@ export default {
             const option = {
                 backgroundColor: '#111111',
                 title: {
-                    text: '订单表',
-                    left: `${gridPaddingPercent / 2}%`,
-                    top: '28',
+                    text: 'YYYY-MM-DD HH:mm:ss:SSS',
+                    left: `${gridPaddingPercent}%`,
+                    top: `${gridPaddingPercent}%`,
+                    padding: [5, 0],
                     textStyle: {
-                        color: '#eeeeee'
+                        fontWeight: 'bold',
+                        fontSize: 14,
+                        color: '#acacac'
                     }
                 },
                 grid: [
-                    { left: `${gridPaddingPercent}%`, top: '20%', width: `${50 - gridPaddingPercent}%`, height: '50%' },
-                    { right: `${gridPaddingPercent}%`, top: '20%', width: `${50 - gridPaddingPercent}%`, height: '50%' }
+                    {
+                        show: true,
+                        left: `${gridPaddingPercent}%`,
+                        top: `${gridPaddingPercent + 10.5}%`,
+                        width: `${50 - gridPaddingPercent}%`,
+                        height: '77%',
+                        borderColor: '#1f1f1f'
+                    },
+                    {
+                        show: true,
+                        right: `${gridPaddingPercent}%`,
+                        top: `${gridPaddingPercent + 10.5}%`,
+                        width: `${50 - gridPaddingPercent}%`,
+                        height: '77%',
+                        borderColor: '#1f1f1f'
+                    }
                 ],
                 tooltip: {
                     formatter: (params) => {
-                        const { componentType, data } = params
+                        const { componentType, data, componentSubType } = params
                         if (componentType === 'timeline' && this.orderBooks[data]) {
                             return dayjs(this.orderBooks[data].ts).format('YYYY-MM-DD HH:mm:ss:SSS')
-                        } else if (componentType === 'bar') {
+                        } else if (componentSubType === 'bar') {
                             return `价格：${data.name}<br/>合约张数：${data.oValue}<br/>订单数量：${data.count}`;
                         } else {
                             return ''
@@ -204,7 +228,7 @@ export default {
                     elements: [
                         {
                             type: 'text',
-                            top: '14%',
+                            top: `${gridPaddingPercent + 4}%`,
                             left: `${gridPaddingPercent}%`,
                             style: {
                                 text: '买入',
@@ -215,7 +239,7 @@ export default {
                         },
                         {
                             type: 'text',
-                            top: '14%',
+                            top: `${gridPaddingPercent + 4}%`,
                             left: `51%`,
                             style: {
                                 text: '卖出',
@@ -226,7 +250,7 @@ export default {
                         },
                         {
                             type: 'text',
-                            top: '17%',
+                            top: `${gridPaddingPercent + 8}%`,
                             left: `${gridPaddingPercent}%`,
                             style: {
                                 text: '数量(张)',
@@ -237,7 +261,7 @@ export default {
                         },
                         {
                             type: 'text',
-                            top: '17%',
+                            top: `${gridPaddingPercent + 8}%`,
                             left: 'center',
                             style: {
                                 text: '价格',
@@ -248,7 +272,7 @@ export default {
                         },
                         {
                             type: 'text',
-                            top: '17%',
+                            top: `${gridPaddingPercent + 8}%`,
                             right: `${gridPaddingPercent}%`,
                             style: {
                                 text: '数量(张)',
@@ -313,7 +337,9 @@ export default {
                     playInterval: this.playInterval,
                     axisType: 'category',
                     data: timelineData,
-                    bottom: '20%'
+                    bottom: `${gridPaddingPercent}%`,
+                    left: `${gridPaddingPercent * 3}%`,
+                    right: `${gridPaddingPercent * 3}%`
                 },
                 series: [
                     {
@@ -331,12 +357,14 @@ export default {
                         xAxisIndex: 0,
                         yAxisIndex: 0,
                         barCategoryGap: '0%',
-                        color: 'rgba(0,0,0,0)',
+                        color: 'transparent',
                         barGap: '-100%',
                         datasetIndex: 1,
                         label: {
                             show: true,
                             formatter: ({ data }) => data.oValue,
+                            // position: ['0%', '50%'],
+                            // verticalAlign: 'middle',
                             position: 'insideLeft',
                             style: {
                                 color: '#fff'
@@ -361,7 +389,7 @@ export default {
                         datasetIndex: 3,
                         barCategoryGap: '0%',
                         barGap: '-100%',
-                        color: 'rgba(0,0,0,0)',
+                        color: 'transparent',
                         label: {
                             show: true,
                             formatter: ({ data }) => data.oValue,
@@ -399,6 +427,7 @@ export default {
                 const res = await getOrderBooks({
                     tsGte,
                     tsLte,
+                    interval: parseInt(this.interval)
                 })
 
                 res.data.data.forEach(ob => {
@@ -420,6 +449,7 @@ export default {
                         }
                     }).reverse()
                     ob.bids.length = 10
+                    delete ob.data
                 })
                 this.orderBooks = res.data.data
             } catch (err) {
@@ -460,16 +490,26 @@ export default {
     max-width: 1024px;
     margin: auto;
     height: 100%;
-    border-radius: 12px;
+    border-radius: 6px;
     position: relative;
+    display: flex;
+    flex-direction: column;
+    background-color: #111111;
+
+    .title {
+        flex: 0;
+        font-size: 18px;
+        font-weight: bold;
+        padding: 12px;
+        color: #eeeeee;
+    }
 
     .top {
-        position: absolute;
-        top: 750px;
-        right: 2%;
-        z-index: 999;
+        flex: 0;
+        padding: 12px;
         display: flex;
         align-items: center;
+        flex-wrap: wrap;
 
         &>* {
             margin-left: 12px;
@@ -478,8 +518,8 @@ export default {
     }
 
     .content {
+        flex: 1;
         width: 100%;
-        height: 100%;
 
         .chart {
             width: 100%;

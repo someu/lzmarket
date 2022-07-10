@@ -38,7 +38,7 @@ router.post("/list", async (ctx, next) => {
   if (interval) {
     const originData = [...data];
     const lastData = [];
-    let offset = tsLte;
+    let offset = tsGte;
     while (originData.length) {
       if (originData[0].ts >= offset) {
         lastData.push(originData[0]);

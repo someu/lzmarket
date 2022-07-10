@@ -29,8 +29,8 @@ axios.interceptors.response.use(
 );
 
 const routes = [
-  { path: "/", component: import("./views/simulator/index.vue") },
-  { path: "/real", component: import("./views/real/index.vue") },
+  { path: "/simulator", component: import("./views/simulator/index.vue") },
+  { path: "/", component: import("./views/real/index.vue") },
 ];
 
 const router = createRouter({
