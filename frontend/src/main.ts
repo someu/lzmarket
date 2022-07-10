@@ -1,11 +1,13 @@
 import { createApp } from "vue";
 import ElementPlus from "element-plus";
-import { createRouter, createWebHistory } from "vue-router";
+import { createRouter, createWebHashHistory } from "vue-router";
 import "element-plus/dist/index.css";
 import App from "./App.vue";
 import axios from "axios";
 import config from "./config";
 import zhCn from "element-plus/es/locale/lang/zh-cn";
+import Simulator from "./views/simulator/index.vue";
+import Real from "./views/real/index.vue";
 
 axios.defaults.baseURL = config.apiBase;
 
@@ -29,12 +31,12 @@ axios.interceptors.response.use(
 );
 
 const routes = [
-  { path: "/simulator", component: import("./views/simulator/index.vue") },
-  { path: "/", component: import("./views/real/index.vue") },
+  { path: "/simulator", component: Simulator },
+  { path: "/", component: Real },
 ];
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHashHistory(),
   routes,
 });
 

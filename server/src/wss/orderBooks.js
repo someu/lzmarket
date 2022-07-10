@@ -1,4 +1,5 @@
 const { OrderBook } = require("../models");
+const { logger } = require("../utils/log");
 
 // 全局的镜像缓存
 const GlobalSnapshot = {
@@ -38,7 +39,7 @@ function aggregateOrderBooks(orderBooks) {
 module.exports = async function (instId, action, data) {
   try {
     if (data.length >= 2) {
-      console.log(`异常数据长度: ${JSON.stringify(data)}`);
+      logger.info(`异常数据长度: ${JSON.stringify(data)}`);
     }
     const orderBooks = [];
     for (const item of data) {
@@ -63,6 +64,6 @@ module.exports = async function (instId, action, data) {
     }
     await OrderBook.insertMany(orderBooks);
   } catch (err) {
-    console.log(`插入orderbook失败: ${err}`);
+    logger.info(`插入orderbook失败: ${err}`);
   }
 };

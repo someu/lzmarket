@@ -1,9 +1,10 @@
 const { startWssClient } = require("./wss");
 const { startServer } = require("./api");
+const { logger } = require("./utils/log");
 require("./models");
 
 global.onunhandledrejection = function (e) {
-  console.log(`未处理的错误: ${e}`);
+  logger.error(`未处理的错误: ${e}`);
 };
 
 function main() {
