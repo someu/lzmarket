@@ -4,14 +4,8 @@ const { OrderBook } = require("../models");
 const router = new Router({ prefix: "/orderbook" });
 
 router.post("/list", async (ctx, next) => {
-  const {
-    page = 1,
-    size = 10,
-    instId,
-    action,
-    tsGte,
-    tsLte,
-  } = ctx.request.body;
+  const { page, size, instId, action, tsGte, tsLte, interval } =
+    ctx.request.body;
 
   const query = {};
 
@@ -22,21 +16,39 @@ router.post("/list", async (ctx, next) => {
     query.action = instId;
   }
   if (tsGte || tsLte) {
-    query.ts = [];
+    query.$and = [];
     if (tsGte) {
-      query.ts.push({ $get: tsGte });
+      query.$and.push({ ts: { $gte: tsGte } });
     }
     if (tsLte) {
-      query.ts.push({ $lte: tsLte });
+      query.$and.push({ ts: { $lte: tsLte } });
     }
+  } else {
+    throw new Error("请输入时间范围");
   }
 
-  let find = OrderBook.find(query);
+  let find = OrderBook.find(query).sort({ ts: 1 });
   if (page && size) {
     find = find.skip((page - 1) * size).limit(size);
   }
 
-  const data = await find;
+  let data = await find;
+
+  // 处理间隔
+  if (interval) {
+    const originData = [...data];
+    const lastData = [];
+    let offset = tsGte;
+    while (originData.length) {
+      if (originData[0].ts >= offset) {
+        lastData.push(originData[0]);
+        offset += interval;
+      }
+      originData.shift();
+    }
+    data = lastData;
+  }
+
   const count = await OrderBook.count(query);
 
   ctx.body = {

@@ -1,7 +1,10 @@
 const Koa = require("koa");
 const koaBody = require("koa-body");
+const cors = require("@koa/cors");
+const serve = require("koa-static");
 
 const config = require("../config");
+const { logger } = require("../utils/log");
 
 async function auth(ctx, next) {
   const { apiSec } = ctx.request.body;
@@ -23,7 +26,7 @@ async function handleError(ctx, next) {
     if (body && Object.keys(body).length) {
       log += ` - ${JSON.stringify(body)}`;
     }
-    console.log(log);
+    logger.info(log);
   } catch (e) {
     ctx.body = {
       code: -1,
@@ -39,8 +42,9 @@ async function notFound(ctx, next) {
 function startServer() {
   const app = new Koa();
   app.use(handleError);
-
+  app.use(cors());
   app.use(koaBody());
+  app.use(serve(config.paths.fontendDist));
 
   app.use(auth);
   app.use(require("./orderBook"));
@@ -50,10 +54,10 @@ function startServer() {
   app.listen(config.server.listen);
 
   app.on("error", (error) => {
-    console.error(`未知错误 ${error}`);
+    logger.error(`未知错误 ${error}`)  
   });
 
-  console.log(`服务启动成功: http://127.0.0.1:${config.server.listen}`);
+  logger.info(`服务启动成功: http://127.0.0.1:${config.server.listen}`);
 
   return app;
 }

@@ -1,5 +1,6 @@
 const config = require("../config");
 const mongoose = require("mongoose");
+const { logger } = require("../utils/log");
 
 mongoose.connect(config.mongo.host, {
   dbName: config.mongo.db,
@@ -10,7 +11,7 @@ mongoose.connect(config.mongo.host, {
 });
 
 mongoose.connection.on("reconnectFailed", () => {
-  console.error("mongodb重试达到上限");
+  logger.error("mongodb重试达到上限");
 });
 
 module.exports = {
