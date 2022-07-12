@@ -1,23 +1,55 @@
 const Router = require("koa-router");
-const { Account } = require("../models");
-const mongoose = require("mongoose");
+const { OrderBook } = require("../models");
 
-const router = new Router({ prefix: "/account" });
+const router = new Router({ prefix: "/order" });
 
-/**
- * 新建账户
- */
-router.post("/", async (ctx, next) => {
-  const { testId } = ctx.request.body;
+router.post("/list", async (ctx, next) => {
+  const { page, size, instId, action, tsGte, tsLte, interval } =
+    ctx.request.body;
 
   const query = {};
 
-  if (testId) {
-    query.testId = mongoose.Types.ObjectId(testId);
+  if (instId) {
+    query.instId = instId;
+  }
+  if (action) {
+    query.action = instId;
+  }
+  if (tsGte || tsLte) {
+    query.$and = [];
+    if (tsGte) {
+      query.$and.push({ ts: { $gte: tsGte } });
+    }
+    if (tsLte) {
+      query.$and.push({ ts: { $lte: tsLte } });
+    }
+  } else {
+    throw new Error("请输入时间范围");
   }
 
-  const data = await Account.find(query);
-  const count = await Account.count(query);
+  let find = OrderBook.find(query).sort({ ts: 1 });
+  if (page && size) {
+    find = find.skip((page - 1) * size).limit(size);
+  }
+
+  let data = await find;
+
+  // 处理间隔
+  if (interval) {
+    const originData = [...data];
+    const lastData = [];
+    let offset = tsGte;
+    while (originData.length) {
+      if (originData[0].ts >= offset) {
+        lastData.push(originData[0]);
+        offset += interval;
+      }
+      originData.shift();
+    }
+    data = lastData;
+  }
+
+  const count = await OrderBook.count(query);
 
   ctx.body = {
     code: 0,

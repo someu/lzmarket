@@ -3,7 +3,8 @@ const config = require("../config");
 const { logger } = require("../utils/log");
 
 const Handles = {
-  books: require("./orderBooks"),
+  books: require("./books"),
+  trades: require("./trades"),
 };
 
 function startWssClient() {
