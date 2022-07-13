@@ -20,7 +20,7 @@ function startWssClient() {
         JSON.stringify({ op: "unsubscribe", args: config.okx.subscribes })
       );
       ws.send(JSON.stringify({ op: "subscribe", args: config.okx.subscribes }));
-    }, 60 * 3000);
+    }, 60 * 1000);
   });
 
   ws.on("message", function message(dataStr) {
