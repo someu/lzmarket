@@ -7,23 +7,63 @@ const Handles = {
   trades: require("./trades"),
 };
 
-function startWssClient() {
-  const ws = new WebSocket(config.okx.wss);
-
-  ws.on("open", function open() {
+class WssClient {
+  constructor() {
+    this.ws = null;
+    this.startTimer = -1;
+    this.pingTimer = -1;
+    this.poneTimer = -1;
+    this.start = this.start.bind(this);
+    this.heartbeat = this.heartbeat.bind(this);
+    this.onOpen = this.onOpen.bind(this);
+    this.onMessage = this.onMessage.bind(this);
+    this.onError = this.onError.bind(this);
+    this.onClose = this.onClose.bind(this);
+  }
+  start() {
+    // 启动连接
+    clearTimeout(this.pingTimer);
+    clearTimeout(this.poneTimer);
+    if (this.ws) {
+      this.ws.terminate();
+    }
+    logger.info("开始连接 websock")
+    const ws = new WebSocket(config.okx.wss);
+    this.ws = ws;
+    ws.on("open", this.onOpen);
+    ws.on("message", this.onMessage);
+    ws.on("error", this.onError);
+    ws.on("close", this.onClose);
+    // 若没有连接成功，则不断重连
+    this.startTimer = setTimeout(this.start, 5000);
+  }
+  heartbeat() {
+    this.pingTimer = setTimeout(() => {
+      logger.info("ping");
+      this.ws.send("ping");
+      this.poneTimer = setTimeout(this.start, 2000);
+      this.heartbeat();
+    }, 15000);
+  }
+  onOpen() {
     logger.info("websocket 连接成功");
-    ws.send(JSON.stringify({ op: "subscribe", args: config.okx.subscribes }));
-    // 每过三分钟，重新订阅
-    setInterval(() => {
-      logger.info(`重新订阅`);
-      ws.send(
-        JSON.stringify({ op: "unsubscribe", args: config.okx.subscribes })
-      );
-      ws.send(JSON.stringify({ op: "subscribe", args: config.okx.subscribes }));
-    }, 60 * 1000);
-  });
+    clearTimeout(this.startTimer);
+    this.heartbeat();
+    this.ws.send(
+      JSON.stringify({ op: "subscribe", args: config.okx.subscribes })
+    );
+  }
+  onMessage(buffer) {
+    const dataStr = buffer ? buffer.toString() : "";
 
-  ws.on("message", function message(dataStr) {
+    // pong信息
+    if (dataStr === "pong") {
+      logger.info("pong");
+      clearTimeout(this.poneTimer);
+      return;
+    }
+
+    // 订阅信息
     const {
       event,
       arg: { channel, instId },
@@ -43,11 +83,17 @@ function startWssClient() {
     } else {
       logger.info(`未处理的消息: ${channel}`);
     }
-  });
-
-  ws.on("error", function (e) {
+  }
+  onError(e) {
     logger.error(`websocket 出错: ${e}`);
-  });
+  }
+  onClose() {
+    logger.warn("websocket 连接断开");
+  }
+}
+
+function startWssClient() {
+  new WssClient().start();
 }
 
 module.exports = {
